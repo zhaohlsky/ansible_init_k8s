@@ -1,0 +1,15 @@
+- name: master节点上安装keepalived
+  shell: yum install -y keepalived 
+  register: keepalived_value
+  until: keepalived_value.rc == 0
+  retries: 3
+  delay: 5
+
+- name: 生成配置文件
+  template: src=/etc/ansible/roles/ha/templates/keeplived.conf.j2 dest=/etc/keepalived/keepalived.conf
+
+- name: 重启keepalived，使配置生效
+  shell: systemctl restart keepalived
+
+- name: 设置keepalived自启
+  shell: systemctl enable keepalived

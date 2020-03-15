@@ -1,0 +1,17 @@
+---
+- hosts: k8s
+  roles:
+  - environment
+  - docker
+
+- hosts: master
+  roles:
+  - ha
+  - nfs
+
+- hosts: k8s
+  roles:
+  - kubeadm
+  - app
+
+

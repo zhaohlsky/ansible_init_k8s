@@ -1,0 +1,64 @@
+# This is the default ansible 'hosts' file.
+#
+# It should live in /etc/ansible/hosts
+#
+#   - Comments begin with the '#' character
+#   - Blank lines are ignored
+#   - Groups of hosts are delimited by [header] elements
+#   - You can enter hostnames or ip addresses
+#   - A hostname/ip can be a member of multiple groups
+
+# Ex 1: Ungrouped hosts, specify before any group headers.
+
+## green.example.com
+## blue.example.com
+## 192.168.100.1
+## 192.168.100.10
+
+# Ex 2: A collection of hosts belonging to the 'webservers' group
+
+## [webservers]
+## alpha.example.org
+## beta.example.org
+## 192.168.1.100
+## 192.168.1.110
+
+# If you have multiple hosts following a pattern you can specify
+# them like this:
+
+## www[001:006].example.com
+
+# Ex 3: A collection of database servers in the 'dbservers' group
+
+## [dbservers]
+## 
+## db01.intranet.mydomain.net
+## db02.intranet.mydomain.net
+## 10.25.1.56
+## 10.25.1.57
+
+# Here's another example of host ranges, this time there are no
+# leading 0s:
+
+## db-[99:101]-node.example.com
+
+[master]
+master01 ansible_ssh_host=192.168.10.201 ansible_ssh_user="root" ansible_ssh_pass="a" ansible_ssh_port=22 nodename=master01.k8s keeplived_identity=MASTER keeplived_int=enp0s3 keeplived_priority=100
+master02 ansible_ssh_host=192.168.10.202 ansible_ssh_user="root" ansible_ssh_pass="a" ansible_ssh_port=22 nodename=master02.k8s keeplived_identity=BACKUP keeplived_int=enp0s3 keeplived_priority=90
+master03 ansible_ssh_host=192.168.10.203 ansible_ssh_user="root" ansible_ssh_pass="a" ansible_ssh_port=22 nodename=master03.k8s keeplived_identity=BACKUP keeplived_int=enp0s3 keeplived_priority=80
+
+[node]
+node01   ansible_ssh_host=192.168.10.204 ansible_ssh_user="root" ansible_ssh_pass="a" ansible_ssh_port=22 nodename=node01.k8s keeplived_identity=NONE
+
+[k8s:children]
+master
+node
+
+[k8s:vars]
+keeplived_vip="192.168.10.210"
+vip_port="8443"
+subnet="192.168.10.0/24"
+pod_subnet="10.244.0.0/16"
+service_subnet="10.96.0.0/12"
+dockerVersion="18.09.9"
+kube_version="1.16.4"

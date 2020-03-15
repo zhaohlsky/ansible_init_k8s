@@ -1,0 +1,20 @@
+- name: 卸载nfs挂载
+  mount: name=/mnt src={{ hostvars['master01'].ansible_ssh_host }}:/data fstype=nfs state=unmounted
+  when: keeplived_identity=='NONE'
+
+- name: work节点nfs挂载
+  mount: name=/mnt src={{ hostvars['master01'].ansible_ssh_host }}:/data fstype=nfs state=mounted
+  when: keeplived_identity=='NONE'
+
+- name: 拷贝join-worker.sh
+  shell: cp /mnt/join-worker.sh /root/join-worker.sh;chmod +x /root/join-worker.sh
+  when: keeplived_identity=='NONE'
+
+- name: 工作节点加入k8s
+  shell: sh /root/join-worker.sh | tee /root/{{ nodename }}_join.log
+  when: keeplived_identity=='NONE'
+
+- name: 卸载nfs:/mnt
+  shell: umount -v /mnt
+  when: keeplived_identity=='NONE'
+

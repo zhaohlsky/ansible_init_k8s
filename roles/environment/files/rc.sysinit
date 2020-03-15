@@ -1,0 +1,5 @@
+#!/bin/bash
+for file in /etc/sysconfig/modules/*.modules ; do
+[ -x $file ] && $file
+done
+

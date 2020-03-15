@@ -1,0 +1,5 @@
+{
+  "registry-mirrors": ["https://v16stybc.mirror.aliyuncs.com"],
+  "exec-opts": ["native.cgroupdriver=systemd"],
+  "insecure-registries": ["172.17.0.94:5000","nfs.k8s:5000"]
+}

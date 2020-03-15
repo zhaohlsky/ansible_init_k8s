@@ -1,0 +1,5 @@
+- name: 临时关闭swap分区
+  shell: swapoff -a
+
+- name: 永久关闭swap分区
+  shell: sed -i.bak '/swap/s/^/#/' /etc/fstab

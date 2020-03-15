@@ -1,0 +1,24 @@
+- name: 创建nfs路径
+  file: path=/data state=directory owner=nfsnobody group=nfsnobody
+  when: keeplived_identity=='MASTER'
+
+- name: 编辑/etc/exports脚本
+  template: src=/etc/ansible/roles/nfs/templates/exports.sh.j2 dest=/tmp/exports.sh
+  when: keeplived_identity=='MASTER'
+
+- name: 实行exports.sh脚本
+  shell: chmod +x /tmp/exports.sh;sh /tmp/exports.sh
+  when: keeplived_identity=='MASTER'
+
+- name: 修改nfs路径属主
+  shell: chown -R nfsnobody.nfsnobody /data
+  when: keeplived_identity=='MASTER'
+
+- name: 重启nfs和rpcbind使配置生效
+  shell: systemctl restart nfs;systemctl restart rpcbind
+
+- name: 设置nfs和rpcbind自启
+  shell: systemctl enable nfs;systemctl enable rpcbind
+
+- name: 预处理主节点nfs
+  service: name=nfs state=restarted

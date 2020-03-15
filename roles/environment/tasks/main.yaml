@@ -1,0 +1,4 @@
+- import_tasks: kernel.yaml
+- import_tasks: hostname.yaml
+- import_tasks: hosts.yaml
+- import_tasks: swapoff.yaml

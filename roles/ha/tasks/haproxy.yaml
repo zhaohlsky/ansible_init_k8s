@@ -1,0 +1,24 @@
+- name: 临时修改ip_nonlocal_bind参数
+  shell: echo 1 > /proc/sys/net/ipv4/ip_nonlocal_bind && sysctl -w net.ipv4.ip_nonlocal_bind=1
+
+- name: 永久ip_nonlocal_bind=1生效
+  shell: echo 'net.ipv4.ip_nonlocal_bind=1' >> /etc/sysctl.conf
+
+- name: 创建/run/haproxy目录
+  file: path=/run/haproxy state=directory mode=0755
+
+- name: master节点上安装haproxy
+  shell: yum install -y haproxy
+  register: haproxy_value
+  until: haproxy_value.rc == 0
+  retries: 3
+  delay: 5
+
+- name: 生成配置文件
+  template: src=/etc/ansible/roles/ha/templates/haproxy.cfg.j2 dest=/etc/haproxy/haproxy.cfg
+
+- name: 重启haproxy，使配置生效
+  shell: systemctl restart haproxy
+
+- name: 设置haproxy自启
+  shell: systemctl enable haproxy

@@ -1,0 +1,16 @@
+- name: 安装kubelet kubeadm kubectl
+  shell: yum install -y kubelet-{{ kube_version }} kubeadm-{{ kube_version }} kubectl-{{kube_version}}
+  register: kubelet_value
+  until: kubelet_value.rc == 0
+  retries: 3
+  delay: 5
+
+- name: 启动kubelet并自启
+  shell: systemctl enable kubelet && systemctl start kubelet
+
+#- name: kubelet命令补全
+#  shell: echo "source < (kubectl completion bash)" >> /root/.bash_profile
+
+#- name: 命令补全生效
+#  shell: source /root/.bash_profile
+

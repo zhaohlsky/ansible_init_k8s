@@ -1,0 +1,31 @@
+- name: 安装docker-ce
+#  yum: name=docker-ce-{{ dockerVersion }},docker-ce-cli-{{ dockerVersion }},containerd.io  
+  shell: yum install -y docker-ce-{{ dockerVersion }} docker-ce-cli-{{ dockerVersion }} containerd.io  
+  register: docker_value
+  until: docker_value.rc == 0
+  retries: 3
+  delay: 5
+
+- name: 启动docker设置自启
+  shell: systemctl enable docker
+
+- name: 安装bash-completion
+  yum: name=bash-completion
+
+- name: 加载bash-completion
+  shell: source /etc/profile.d/bash_completion.sh
+
+- name: 创建文件夹/etc/docker
+  file: path=/etc/docker state=directory
+
+- name: 配置/etc/docker/daemon.json
+  copy: src=/etc/ansible/roles/docker/files/daemon.json dest=/etc/docker/daemon.json
+
+- name: 重启daemon
+  shell: systemctl daemon-reload
+
+- name: 重启docker
+  shell: systemctl restart docker
+ 
+- name: 设置docker自启
+  shell: systemctl enable docker

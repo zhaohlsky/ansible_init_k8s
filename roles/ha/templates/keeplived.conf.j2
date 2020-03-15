@@ -1,0 +1,30 @@
+! Configuration File for keepalived
+global_defs {
+   router_id {{ nodename }}
+}
+
+vrrp_script CheckK8sMaster {
+    script "curl -k https://127.0.0.1:6443/api"
+    interval 3
+    timeout 9
+    fall 2
+    rise 2
+}
+
+vrrp_instance VI_1 {
+    state {{ keeplived_identity }} 
+    interface {{ keeplived_int }}
+    virtual_router_id 50
+    priority {{ keeplived_priority }}
+    advert_int 1
+    authentication {
+        auth_type PASS
+        auth_pass 1111
+    }
+    virtual_ipaddress {
+        {{ keeplived_vip }}
+    }
+    track_script {
+        CheckK8sMaster
+    }
+}

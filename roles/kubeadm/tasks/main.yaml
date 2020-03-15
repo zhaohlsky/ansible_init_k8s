@@ -1,0 +1,5 @@
+- import_tasks: kubelet.yaml
+- import_tasks: kubeadmin.yaml
+- import_tasks: masterjoink8s.yaml
+- import_tasks: workerjoink8s.yaml
+- import_tasks: stopnfs.yaml

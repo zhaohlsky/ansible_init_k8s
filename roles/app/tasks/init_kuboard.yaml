@@ -1,0 +1,17 @@
+- name: 创建kuboard目录
+  file: path=/root/k8s/kuboard state=directory recurse=yes
+
+- name: 拷贝kuboard配置文档
+  copy: src=/etc/ansible/roles/app/files/kuboard.yaml dest=/root/k8s/kuboard/kuboard.yaml
+
+- name: 部署kuboard
+  shell: kubectl apply -f /root/k8s/kuboard/kuboard.yaml
+  ignore_errors: True
+
+- name: 登录kuboard令牌
+  shell: kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | grep kuboard-user | awk '{print $1}')>/root/k8s/kuboard/token.txt
+  ignore_errors: True
+
+- name: 获取kuboard令牌命令
+  lineinfile: path=/root/k8s/kuboard/get_token.sh line="kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | grep kuboard-user | awk '{print $1}')" create=yes
+  ignore_errors: True

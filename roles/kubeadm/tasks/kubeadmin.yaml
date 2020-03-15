@@ -1,0 +1,56 @@
+- name: 复制集群初始化模板kubeadm-config.yaml
+  template: src=/etc/ansible/roles/kubeadm/templates/kubeadmin_config.yaml.j2  dest=/root/kubeadmin_config.yaml
+  when: keeplived_identity=='MASTER'
+
+- name: 使用kubeadm初始化第一个主节点
+  shell: kubeadm init --config=/root/kubeadmin_config.yaml --upload-certs | tee /root/kubeadm-init.log
+  when: keeplived_identity=='MASTER'
+
+- name: 第一个主节点初始化后配置
+  shell: rm -rf /root/.kube/&&mkdir /root/.kube/&&cp -i /etc/kubernetes/admin.conf /root/.kube/config
+  when: keeplived_identity=='MASTER'
+
+- name: 节点配置备份
+  shell: cp -a /etc/kubernetes /data
+  when: keeplived_identity=='MASTER'
+
+- name: 重启nfs服务
+  service: name=nfs state=restarted
+  when: keeplived_identity=='MASTER'
+ 
+- name: 卸载备节点nfs挂载
+  mount: name=/mnt src={{ hostvars['master01'].ansible_ssh_host }}:/data fstype=nfs state=unmounted
+  when: keeplived_identity=='BACKUP'
+
+- name: 备节点nfs挂载
+  mount: name=/mnt src={{ hostvars['master01'].ansible_ssh_host }}:/data fstype=nfs state=mounted
+  when: keeplived_identity=='BACKUP'
+
+- name: 拷贝证书分发脚本
+  copy: src=/etc/ansible/roles/kubeadm/files/k8s-master-zhengshu.sh dest=/root/k8s-master-zhengshu.sh mode=0777
+  when: keeplived_identity=='BACKUP'
+
+- name: 执行证书分发脚本，分发到第二第三主节点
+  shell: sh /root/k8s-master-zhengshu.sh
+  when: keeplived_identity=='BACKUP'
+
+- name: 拷贝flannel插件模板
+  template: src=/etc/ansible/roles/kubeadm/templates/flannel.yaml.j2  dest=/root/flannel.yaml
+  when: keeplived_identity=='MASTER'
+
+- name: 安装flannel插件
+  shell: kubectl apply -f /root/flannel.yaml
+  when: keeplived_identity=='MASTER'
+
+- name: 主master节点生成join-token
+  shell: kubeadm token create --print-join-command > /root/join-token.txt
+  when: keeplived_identity=='MASTER'
+
+- name: 分享join-work.sh
+  shell: sed 's/^/\#\!\/bin\/bash\n&/g' /root/join-token.txt> /data/join-worker.sh
+  when: keeplived_identity=='MASTER'
+  
+- name: 分享join-master.sh
+  shell: sed 's/$/--control-plane/' /root/join-token.txt>/root/join-master-token.txt; sed 's/^/\#\!\/bin\/bash\n&/g' /root/join-master-token.txt> /data/join-master.sh
+  when: keeplived_identity=='MASTER'
+

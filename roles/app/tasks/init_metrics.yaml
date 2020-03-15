@@ -1,0 +1,7 @@
+- name: 拷贝metrics配置文档
+  copy: src=/etc/ansible/roles/app/files/metrics dest=/root/k8s owner=root group=root mode=0755
+
+- name: 部署metrice
+  shell: kubectl apply -f /root/k8s/metrics
+  ignore_errors: True
+

@@ -1,0 +1,82 @@
+- name: 阿里源
+  copy: src=/etc/ansible/roles/environment/files/CentOS-Base.repo dest=/etc/yum.repos.d/CentOS-Base.repo 
+
+- name: 安装yum-utils
+  yum: name=yum-utils
+
+- name: 配置docker阿里云镜像源
+  shell: yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+
+- name: 配置kubernetes镜像源
+  copy: src=/etc/ansible/roles/docker/files/kubernetes.repo dest=/etc/yum.repos.d/kubernetes.repo
+
+- name: 清除yum缓存
+  shell: yum clean all -y
+
+- name: 构造yum缓存
+  shell: yum makecache fast -y
+  register: makecache_value
+  until: makecache_value.rc == 0
+  retries: 3
+  delay: 5
+
+- name: 安装必要软件
+  yum: name=yum-utils,device-mapper-persistent-data,lvm2,conntrack,ntpdate,ntp,ipvsadm,ipset,sysstat,libseccomp,wget,vim,net-tools,git,nfs-utils,vim
+
+- name: 设置系统时区为中国上海
+  shell: timedatectl set-timezone Asia/Shanghai
+
+- name: 将当前UTC时间写入硬件时钟
+  shell: timedatectl set-local-rtc 0
+
+- name: 重启依赖于系统时间的rsyslog
+  service: name=rsyslog state=restarted
+
+- name: 重启依赖于系统时间的crond
+  service: name=crond state=restarted
+
+- name: 安装sshpass
+  yum: name=sshpass
+
+- name: 安装firewalld
+  yum: name=firewalld
+
+- name: 停止firewalld关闭自启
+  service: name=firewalld state=stopped enabled=no
+
+- name: 安装iptables
+  yum: name=iptables-services
+
+- name: 永久关闭SELinux
+  shell: echo SELINUX=disabled>/etc/selinux/config
+
+- name: 临时关闭SELinux
+  shell: setenforce 0
+
+- name: ipvs模块文件
+  copy: src=/etc/ansible/roles/environment/files/ipvs.modules dest=/etc/sysconfig/modules/ipvs.modules mode=0755
+
+- name: 加载ipvs内核模块
+  shell: sh /etc/sysconfig/modules/ipvs.modules && lsmod | grep -e ip_vs -e nf_conntrack_ipv4
+
+- name: 挂载br_netfilter
+  shell: modprobe br_netfilter
+
+- name: 拷贝配置/etc/rc.sysinit
+  copy: src=/etc/ansible/roles/environment/files/rc.sysinit dest=/etc/rc.sysinit 
+
+- name: 拷贝配置/etc/sysconfig/modules/br_netfilter.modules
+  copy: src=/etc/ansible/roles/environment/files/br_netfilter.modules dest=/etc/sysconfig/modules/br_netfilter.modules mode=0755 
+
+- name: bridge-nf-call-iptables临时生效
+  shell: sysctl net.bridge.bridge-nf-call-iptables=1
+
+- name: bridge-nf-call-ip6tables临时生效
+  shell: sysctl net.bridge.bridge-nf-call-ip6tables=1
+
+- name: 拷贝/etc/sysctl.d/k8s.conf
+  copy: src=/etc/ansible/roles/environment/files/k8s.conf dest=/etc/sysctl.d/k8s.conf
+
+- name: /etc/sysctl.d/k8s.conf永久生效
+  shell: sysctl -p /etc/sysctl.d/k8s.conf
+

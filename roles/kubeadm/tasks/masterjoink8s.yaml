@@ -1,0 +1,15 @@
+- name: 拷贝join-master.sh
+  shell: cp /mnt/join-master.sh /root/join-master.sh;chmod +x /root/join-master.sh
+  when: keeplived_identity=='BACKUP'
+
+- name: 备节点加入k8s
+  shell: sh /root/join-master.sh | tee /root/{{ nodename }}_join.log
+  when: keeplived_identity=='BACKUP'
+
+- name: 卸载nfs:/mnt
+  mount: name=/mnt src={{ hostvars['master01'].ansible_ssh_host }}:/data fstype=nfs state=unmounted
+  when: keeplived_identity=='BACKUP'
+
+- name: 加入集群后配置/root/.kube
+  shell: mkdir -p /root/.kube; cp -i /etc/kubernetes/admin.conf /root/.kube/config;chown $(id -u):$(id -g) /root/.kube/config
+  when: keeplived_identity=='BACKUP'

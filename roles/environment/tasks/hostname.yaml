@@ -1,0 +1,3 @@
+- name: 根据ansible的hosts文件修改主机名
+  shell: hostnamectl set-hostname {{ nodename }}
+

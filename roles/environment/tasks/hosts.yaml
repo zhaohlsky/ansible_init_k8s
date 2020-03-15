@@ -1,0 +1,18 @@
+- name: 备份/etc/hosts文件
+  shell: cp /etc/hosts /etc/hosts.bak
+
+- name: 清空/etc/hosts配置
+  shell: echo ""> /etc/hosts
+
+#- name: 创建脚本临时文件夹
+#  file: path=/etc/ansible state=directory
+
+- name: 拷贝本地解析域名的脚本
+  copy: src=/etc/ansible/roles/environment/files/hosts.sh dest=/tmp/hosts.sh mode=0777
+
+- name: 拷贝ansible hosts文件
+  copy: src=/etc/ansible/hosts dest=/tmp/hosts
+
+- name: 执行本地域名解析脚本
+  shell: sh /tmp/hosts.sh
+
